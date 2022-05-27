@@ -63,20 +63,114 @@ app.post("/product",(req,res)=>{
 
 app.post("/create-checkout-session", async (req, res) => {
     try {
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            mode: 'payment',
-            line_items: [
-                {
-                    price:'price_1L2gLnKfS07LkwswM0ERACcW',
-                    quantity:req.body.qty||1
-                }
-            ],
+        const {freq, packageName, qty}= req.body
+       /*
+       #NOTE
+       freq can be ONE, MONTHLY, YEARLY
+       packageName can be BASIC, STANDARD , CUSTOM
+       */
 
+        const priceIds={
+            ONE:{
+                BASIC:'price_1L2gJyKfS07LkwswsaYE7z5j',
+                STANDARD:'price_1L2gLnKfS07LkwswM0ERACcW',
+                CUSTOM:'price_1L4ACkKfS07LkwswvstDfjy7'
+            },
+            MONTHLY:{
+                BASIC:'price_1L3lt7KfS07LkwswBmf5NzYg',
+                STANDARD:'price_1L3luIKfS07Lkwswh6ldcYAB' ,
+                CUSTOM:'price_1L4AAhKfS07LkwswYLRwiH1r'
+            },
+            YEARLY:{
+                BASIC:'price_1L3m7DKfS07LkwswulkrJUAz',
+                STANDARD:'price_1L3m87KfS07Lkwsw4orzSelc' ,
+                CUSTOM:'price_1L4AAhKfS07Lkwswy9qjq950'
+            }
+        }
+        const coupons={
+            ONE_MONTH:'d8IAwI9T',
+            TEN_PERCENTAGE:'G8zr8Z0j',
+            TWENTY_PERCENTAGE:'5pF3hQ8F'
+        }
+        let sessionObj=
+        {
+            payment_method_types: ["card"],
+            mode: freq=='ONE'?'payment':'subscription',
             success_url: `${process.env.CLIENT_URL}/success.html`,
             cancel_url: `${process.env.CLIENT_URL}/cancel.html`,
-        })
+        }
+
+
+
+        if (freq=='ONE'){
+
+            if (packageName=='CUSTOM'){
+
+                let discount = coupons.TEN_PERCENTAGE
+                if (qty>50){
+                    discount=coupons.TWENTY_PERCENTAGE
+                }
+                const line_item={
+                    price:priceIds[freq][packageName],
+                    quantity: qty||1,
+                }
+                sessionObj={
+                    ...sessionObj,
+                    line_items: [line_item],
+                    discounts: [{
+                        coupon: discount,
+                    }],
+                }
+
+            }else{
+                let line_item={
+                    price:priceIds[freq][packageName],
+                    quantity:qty||1
+                }
+                sessionObj={
+                    ...sessionObj,
+                    line_items: [line_item],
+                }
+
+            }
+
+        } else{
+            let discounts=[]
+
+            if (packageName=='CUSTOM'){
+                if (qty<101){
+                    discounts.push({
+                        coupon: coupons.TEN_PERCENTAGE,
+                    })
+                }else {
+                    discounts.push({
+                        coupon: coupons.TWENTY_PERCENTAGE,
+                    })
+                }
+            }else {
+                if (freq=='YEARLY'){
+                    discounts.push({
+                        coupon: coupons.ONE_MONTH,
+                    })
+                }
+            }
+
+            const line_item={
+                price:priceIds[freq][packageName],
+                quantity:qty||1
+            }
+
+            sessionObj={
+                ...sessionObj,
+                line_items: [line_item],
+                discounts: discounts,
+            }
+        }
+
+
+        const session = await stripe.checkout.sessions.create(sessionObj)
         res.json({ url: session.url })
+        //res.send(req.body)
     } catch (e) {
         res.status(500).json({ error: e.message })
     }
