@@ -35,7 +35,7 @@
       <p class="text-xl font-semibold text-center">On time Custom</p>
       <input type="range" min="7" max="100" v-model="oneTimeRange" class="w-full">
       <p class="text-center"> Listings {{oneTimeRange}}</p>
-      <p class="text-center text-2xl">${{oneTimePrice}}</p>
+      <p class="text-center text-2xl">${{oneTimePriceDiscount}} <strike>${{oneTimePrice}}</strike></p>
 
       <p class="text-center text-sm">
         (min 7, max 100) <br>
@@ -111,16 +111,18 @@
           subscriptionPriceY:(21*3.5*11),
           subscriptionPriceYDiscount:(21*3.5*11-((21*3.5*11)/10)),
           oneTimePrice:(7*4.5),
+          oneTimePriceDiscount:(7*4.5-((7*4.5)/10)),
           freq:'MONTHLY'
         }
       },
       methods:{
         calcOneTimeCustom(){
           let price=this.oneTimeRange * 4.5
+          this.oneTimePrice=price
           if (this.oneTimeRange<51){
-            this.oneTimePrice= price - (price/10)
+            this.oneTimePriceDiscount= price - (price/10)
           }else{
-            this.oneTimePrice= price - (price/5)
+            this.oneTimePriceDiscount= price - (price/5)
           }
         },
         calcSubscribeCustom(){
