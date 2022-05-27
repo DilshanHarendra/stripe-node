@@ -6,15 +6,167 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js" integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ==" crossorigin="anonymous"></script>
-  <script src="./script.js"></script>
-
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body id="app">
+<div class="container mx-auto  p-5">
+
+  <h2 class="text-xl text-center mb-5 font-semibold">One Time Purchase</h2>
+  <div class="grid grid-cols-3 gap-6">
+
+    <div class="block p-5 border ">
+      <p class="text-xl font-semibold text-center">On time Basic</p>
+      <p class="text-center text-sm">$15 (3 listing at $5.00/listing)</p>
+      <p class="text-center text-2xl">$15</p>
+      <button @click="buyNow('ONE','BASIC',1)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
+    </div>
 
 
-  <input type="number" id="number">
-  <button id="checkout">Checkout</button>
-  <button id="create-product">Create Product</button>
+    <div class="block p-5 border ">
+      <p class="text-xl font-semibold text-center">On time Standard</p>
+      <p class="text-center text-sm">$27 (6 listings at $4.50/listing)</p>
+      <p class="text-center text-2xl">$27</p>
+      <button @click="buyNow('ONE','STANDARD',1)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
+    </div>
 
+
+    <div class="block p-5 border ">
+      <p class="text-xl font-semibold text-center">On time Custom</p>
+      <input type="range" min="7" max="100" v-model="oneTimeRange" class="w-full">
+      <p class="text-center"> Listings {{oneTimeRange}}</p>
+      <p class="text-center text-2xl">${{oneTimePrice}}</p>
+
+      <p class="text-center text-sm">
+        (min 7, max 100) <br>
+        7 - 50 listings -> 10% discount of total price<br>
+        50+ listings -> 20% discount of total price
+      </p>
+      <button @click="buyNow('ONE','CUSTOM',oneTimeRange)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
+
+    </div>
+
+  </div>
+
+  <h2 class="text-xl text-center my-5 font-semibold">Subscription</h2>
+
+    <div class="flex  items-center mb-5">
+      <label for="monthly"  class="block cursor-pointer">
+        <input type="radio" name="freq" id="monthly" v-model="freq" value="MONTHLY">
+        Monthly
+      </label>
+      <label for="yearly"  class="block cursor-pointer ml-5">
+        <input type="radio" name="freq" id="yearly" v-model="freq" value="YEARLY">
+        Yearly
+      </label>
+    </div>
+
+  <div class="grid grid-cols-3 gap-6">
+
+    <div class="block p-5 border ">
+      <p class="text-xl font-semibold text-center">Subscribe Basic</p>
+      <p class="text-center text-sm">$20 (5 listings/month at $4/listing)</p>
+      <p class="text-center text-2xl">${{freq=='MONTHLY'?20:(20*12-20)}} <strike v-if="freq=='YEARLY'" class="text-sm">${{(20*12)}}</strike></p>
+      <button @click="buyNow(freq,'BASIC',1)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
+    </div>
+
+
+    <div class="block p-5 border ">
+      <p class="text-xl font-semibold text-center">Subscribe Standard</p>
+      <p class="text-center text-sm">$70 (20 listings at $3.50/listing)</p>
+      <p class="text-center text-2xl">${{freq=='MONTHLY'?70:(70*12-70)}} <strike v-if="freq=='YEARLY'" class="text-sm">${{(70*12)}}</strike></p>
+      <button @click="buyNow(freq,'STANDARD',1)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
+    </div>
+
+
+    <div class="block p-5 border ">
+      <p class="text-xl font-semibold text-center">Subscribe Custom</p>
+      <input type="range" min="21" max="1000" v-model="subscriptionRange" class="w-full">
+      <p class="text-center"> Listings {{subscriptionRange}}</p>
+      <p class="text-center text-2xl">${{freq=='MONTHLY'?subscriptionPriceM:subscriptionPriceYDiscount}} <strike v-if="freq=='YEARLY'" class="text-sm">${{(subscriptionPriceY)}}</strike></p>
+
+      <p class="text-center text-sm">
+        (min 21) <br>
+        with a starting price of $3.50/listing<br>
+        Volume discounts<br>
+        21 - 100 listings -> 10% discount of total price<br>
+        100+ listings -> 20% discount of total price
+      </p>
+      <button @click="buyNow(freq,'CUSTOM',subscriptionRange)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
+
+    </div>
+
+  </div>
+
+  <script>
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+          message: 'Hello Vue!',
+          oneTimeRange:7,
+          subscriptionRange:21,
+          subscriptionPriceM:(21*3.5-((21*3.5)/10)),
+          subscriptionPriceY:(21*3.5*11),
+          subscriptionPriceYDiscount:(21*3.5*11-((21*3.5*11)/10)),
+          oneTimePrice:(7*4.5),
+          freq:'MONTHLY'
+        }
+      },
+      methods:{
+        calcOneTimeCustom(){
+          let price=this.oneTimeRange * 4.5
+          if (this.oneTimeRange<51){
+            this.oneTimePrice= price - (price/10)
+          }else{
+            this.oneTimePrice= price - (price/5)
+          }
+        },
+        calcSubscribeCustom(){
+          if (this.freq=='MONTHLY'){
+            let price=this.subscriptionRange * 3.5
+            if (this.subscriptionRange<101){
+              this.subscriptionPriceM= (price-(price/10))
+            }else{
+              this.subscriptionPriceM= (price-(price/5))
+            }
+          }else {
+            let price=this.subscriptionRange * 3.5*11
+            this.subscriptionPriceY=price
+            if (this.subscriptionRange<101){
+              this.subscriptionPriceYDiscount= (price-(price/10))
+            }else{
+              this.subscriptionPriceYDiscount= (price-(price/5))
+            }
+          }
+        },
+        buyNow(freq,packageName,qty){
+          //freq can be ONE, MONTHLY, YEARLY
+          //packageName can be BASIC, STANDARD , CUSTOM
+          let data={
+            freq,
+            packageName,
+            qty
+          }
+          axios.post('http://localhost:8000/create-checkout-session',data).then(res=>{
+            window.open(res.data.url);
+          }).catch(err=>console.error(err))
+        }
+      },
+      watch:{
+        oneTimeRange(){
+          this.calcOneTimeCustom()
+        },
+        subscriptionRange(){
+          this.calcSubscribeCustom()
+        },
+        freq(){
+          this.calcSubscribeCustom()
+        }
+      }
+    }).mount('#app')
+  </script>
+</div>
 </body>
 </html>
