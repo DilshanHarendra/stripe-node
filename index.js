@@ -64,6 +64,7 @@ app.post("/product",(req,res)=>{
 app.post("/create-checkout-session", async (req, res) => {
     try {
         const {freq, packageName, qty}= req.body
+        console.log(freq=='ONE')
        /*
        #NOTE
        freq can be ONE, MONTHLY, YEARLY
@@ -71,29 +72,42 @@ app.post("/create-checkout-session", async (req, res) => {
        */
 
         const priceIds={
-            ONE:{
-                BASIC:'price_1L2gJyKfS07LkwswsaYE7z5j',
-                STANDARD:'price_1L2gLnKfS07LkwswM0ERACcW',
-                CUSTOM:'price_1L4ACkKfS07LkwswvstDfjy7'
-            },
-            MONTHLY:{
-                BASIC:'price_1L3lt7KfS07LkwswBmf5NzYg',
-                STANDARD:'price_1L3luIKfS07Lkwswh6ldcYAB' ,
-                CUSTOM:'price_1L4AAhKfS07LkwswYLRwiH1r'
-            },
-            YEARLY:{
-                BASIC:'price_1L3m7DKfS07LkwswulkrJUAz',
-                STANDARD:'price_1L3m87KfS07Lkwsw4orzSelc' ,
-                CUSTOM:'price_1L4AAhKfS07Lkwswy9qjq950'
-            }
+            ONETIME:'price_1L7jhYKfS07LkwswD62k0sqt',
+            MONTHLY:'price_1L7jhYKfS07LkwswrdKNjYMi',
+            YEARLY:'price_1L7jhYKfS07Lkwswax1J90ME'
         }
         const coupons={
-            ONE_MONTH:'d8IAwI9T',
-            TEN_PERCENTAGE:'G8zr8Z0j',
-            TWENTY_PERCENTAGE:'5pF3hQ8F'
+            ONETIME_PKG_2:'F00xloU1',
+            ONETIME_PKG_3_V1:'rhu2zdUM',
+            ONETIME_PKG_3_V2:'Mm1TChHM',
+            SUBSCRIPTION_PKG_2_MONTHLY:'Q7Z9leK5',
+            SUBSCRIPTION_PKG_3_V1_MONTHLY:'M9urjnPI',
+            SUBSCRIPTION_PKG_3_V2_MONTHLY:'smRDBMKX',
+            SUBSCRIPTION_PKG_1_YEARLY:'aJ5XmuAT',
+            SUBSCRIPTION_PKG_2_YEARLY:'qWNWcLgH',
+            SUBSCRIPTION_PKG_3_V1_YEARLY:'os9NyQXc',
+            SUBSCRIPTION_PKG_3_V2_YEARLY:'i7WZuMXb'
         }
-        let sessionObj=
-        {
+        const getQty=()=>{
+            switch (packageName){
+                case 'BASIC':{
+                    if (freq=='ONE'){
+                        return 3
+                    }else{
+                        return 5
+                    }
+                }
+                case 'STANDARD':{
+                    if (freq=='ONE'){
+                        return 6
+                    }else{
+                        return 20
+                    }
+                }
+                default : return qty
+            }
+        }
+        let sessionObj= {
             payment_method_types: ["card"],
             mode: freq=='ONE'?'payment':'subscription',
             success_url: `${process.env.CLIENT_URL}/success.html`,
@@ -103,16 +117,18 @@ app.post("/create-checkout-session", async (req, res) => {
 
 
         if (freq=='ONE'){
+            const line_item={
+                price:priceIds.ONETIME,
+                quantity:getQty(),
+            }
 
             if (packageName=='CUSTOM'){
-
-                let discount = coupons.TEN_PERCENTAGE
-                if (qty>50){
-                    discount=coupons.TWENTY_PERCENTAGE
+                if (qty<7){
+                   throw "Quantity must grater than 7"
                 }
-                const line_item={
-                    price:priceIds[freq][packageName],
-                    quantity: qty||1,
+                let discount = coupons.ONETIME_PKG_3_V1
+                if (qty>50){
+                    discount=coupons.ONETIME_PKG_3_V2
                 }
                 sessionObj={
                     ...sessionObj,
@@ -122,11 +138,15 @@ app.post("/create-checkout-session", async (req, res) => {
                     }],
                 }
 
-            }else{
-                let line_item={
-                    price:priceIds[freq][packageName],
-                    quantity:qty||1
+            }else if(packageName=='STANDARD') {
+                sessionObj={
+                    ...sessionObj,
+                    line_items: [line_item],
+                    discounts: [{
+                        coupon: coupons.ONETIME_PKG_2,
+                    }],
                 }
+            }else{
                 sessionObj={
                     ...sessionObj,
                     line_items: [line_item],
@@ -134,37 +154,71 @@ app.post("/create-checkout-session", async (req, res) => {
 
             }
 
-        } else{
-            let discounts=[]
-
-            if (packageName=='CUSTOM'){
-                if (qty<101){
-                    discounts.push({
-                        coupon: coupons.TEN_PERCENTAGE,
-                    })
-                }else {
-                    discounts.push({
-                        coupon: coupons.TWENTY_PERCENTAGE,
-                    })
-                }
-            }else {
-                if (freq=='YEARLY'){
-                    discounts.push({
-                        coupon: coupons.ONE_MONTH,
-                    })
-                }
-            }
-
+        }else if (freq=='MONTHLY'){
             const line_item={
-                price:priceIds[freq][packageName],
-                quantity:qty||1
+                price:priceIds.MONTHLY,
+                quantity:getQty(),
+            }
+            let discount = coupons.SUBSCRIPTION_PKG_2_MONTHLY
+            if(packageName=='CUSTOM'){
+                if (qty<21){
+                    throw "Quantity must grater than 21"
+                }
+                if (qty<101){
+                    discount=coupons.SUBSCRIPTION_PKG_3_V1_MONTHLY
+                }else {
+                    discount=coupons.SUBSCRIPTION_PKG_3_V2_MONTHLY
+                }
+                sessionObj={
+                    ...sessionObj,
+                    line_items: [line_item],
+                    discounts: [{
+                        coupon: discount,
+                    }],
+                }
+            }else if(packageName=='STANDARD') {
+                sessionObj={
+                    ...sessionObj,
+                    line_items: [line_item],
+                    discounts: [{
+                        coupon: coupons.SUBSCRIPTION_PKG_2_MONTHLY,
+                    }],
+                }
+            }else{
+                sessionObj={
+                    ...sessionObj,
+                    line_items: [line_item],
+                }
             }
 
+        }else if (freq=='YEARLY'){
+            const line_item={
+                price:priceIds.YEARLY,
+                quantity:getQty()*12,
+            }
+            let discount = coupons.SUBSCRIPTION_PKG_1_YEARLY
+            if(packageName=='CUSTOM'){
+                if (qty<21){
+                    throw "Quantity must grater than 21"
+                }
+                if (qty<101){
+                    discount=coupons.SUBSCRIPTION_PKG_3_V1_YEARLY
+                }else {
+                    discount=coupons.SUBSCRIPTION_PKG_3_V2_YEARLY
+                }
+            }else if(packageName=='STANDARD') {
+                discount=coupons.SUBSCRIPTION_PKG_2_YEARLY
+            }
             sessionObj={
                 ...sessionObj,
                 line_items: [line_item],
-                discounts: discounts,
+                discounts: [{
+                    coupon: discount,
+                }],
             }
+
+        }else {
+            throw 'freq must be ONE, MONTHLY, YEARLY'
         }
 
 
@@ -172,12 +226,15 @@ app.post("/create-checkout-session", async (req, res) => {
         res.json({ url: session.url })
         //res.send(req.body)
     } catch (e) {
-        res.status(500).json({ error: e.message })
+        res.status(400).json({ error: e })
     }
 })
 
-app.get('/',(req, res) => {
-    res.send({message:"hello"})
+app.get('/price',(req, res) => {
+    stripe.prices.retrieve(
+        'price_1L5CwFDm5VBUQrEut5cxyHmi'
+    ).then(response=>res.json({data:response}))
+        .catch(err=>res.json({data:err}))
 })
 
 

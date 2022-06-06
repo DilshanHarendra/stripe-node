@@ -17,16 +17,16 @@
 
     <div class="block p-5 border ">
       <p class="text-xl font-semibold text-center">On time Basic</p>
-      <p class="text-center text-sm">$15 (3 listing at $5.00/listing)</p>
-      <p class="text-center text-2xl">$15</p>
+      <p class="text-center text-sm">$18 (3 listing at $6.00/listing)</p>
+      <p class="text-center text-2xl">$18</p>
       <button @click="buyNow('ONE','BASIC',1)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
     </div>
 
 
     <div class="block p-5 border ">
       <p class="text-xl font-semibold text-center">On time Standard</p>
-      <p class="text-center text-sm">$27 (6 listings at $4.50/listing)</p>
-      <p class="text-center text-2xl">$27</p>
+      <p class="text-center text-sm">$33 (6 listings at $5.50/listing)</p>
+      <p class="text-center text-2xl">$33</p>
       <button @click="buyNow('ONE','STANDARD',1)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
     </div>
 
@@ -35,12 +35,12 @@
       <p class="text-xl font-semibold text-center">On time Custom</p>
       <input type="range" min="7" max="100" v-model="oneTimeRange" class="w-full">
       <p class="text-center"> Listings {{oneTimeRange}}</p>
-      <p class="text-center text-2xl">${{oneTimePriceDiscount}} <strike>${{oneTimePrice}}</strike></p>
+      <p class="text-center text-2xl">${{oneTimePriceDiscount.toFixed(2)}} <strike>${{oneTimePrice.toFixed(2)}}</strike></p>
 
       <p class="text-center text-sm">
         (min 7, max 100) <br>
-        7 - 50 listings -> 10% discount of total price<br>
-        50+ listings -> 20% discount of total price
+        7 - 50 listings ($5.00/listing) (16.67% discount of base price)<br>
+        50+ listings ($4.50/listing) (25% discount of base price)
       </p>
       <button @click="buyNow('ONE','CUSTOM',oneTimeRange)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
 
@@ -65,16 +65,17 @@
 
     <div class="block p-5 border ">
       <p class="text-xl font-semibold text-center">Subscribe Basic</p>
-      <p class="text-center text-sm">$20 (5 listings/month at $4/listing)</p>
-      <p class="text-center text-2xl">${{freq=='MONTHLY'?20:(20*12-20)}} <strike v-if="freq=='YEARLY'" class="text-sm">${{(20*12)}}</strike></p>
+      <p class="text-center text-sm">$25 (5 listings/month at $5/listing)</p>
+      <p class="text-center text-2xl">${{freq=='MONTHLY'?5*5:(25*12-25)}} <strike v-if="freq=='YEARLY'" class="text-sm">${{(25*12)}}</strike></p>
       <button @click="buyNow(freq,'BASIC',1)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
     </div>
 
 
     <div class="block p-5 border ">
       <p class="text-xl font-semibold text-center">Subscribe Standard</p>
-      <p class="text-center text-sm">$70 (20 listings at $3.50/listing)</p>
-      <p class="text-center text-2xl">${{freq=='MONTHLY'?70:(70*12-70)}} <strike v-if="freq=='YEARLY'" class="text-sm">${{(70*12)}}</strike></p>
+      <p class="text-center text-sm">$90 (20 listings at $4.50/listing)
+        <br>17.5% discount of base price</p>
+      <p class="text-center text-2xl">${{freq=='MONTHLY'?90:(5*20*12-5*20*12*0.175)}} <strike v-if="freq=='YEARLY'" class="text-sm">${{(5*20*12)}}</strike></p>
       <button @click="buyNow(freq,'STANDARD',1)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
     </div>
 
@@ -87,10 +88,10 @@
 
       <p class="text-center text-sm">
         (min 21) <br>
-        with a starting price of $3.50/listing<br>
+        with a starting price of $4/listing<br>
         Volume discounts<br>
-        21 - 100 listings -> 10% discount of total price<br>
-        100+ listings -> 20% discount of total price
+        21 - 100 listings -> $4.00/listing ( {{freq=='MONTHLY'?'20':'26.72'}}% discount of base price)<br>
+        100+ listings -> $3.50/listing ({{freq=='MONTHLY'?'30':'35.83'}}% discount of base price)
       </p>
       <button @click="buyNow(freq,'CUSTOM',subscriptionRange)" class="text-center border px-5 py-1 mx-auto block mt-2 bg-purple-600 text-white hover:bg-purple-400">Buy</button>
 
@@ -100,46 +101,47 @@
 
   <script>
     const { createApp } = Vue
-
+    const ONETIME_BASE=6
+    const SUBSCRIPTION_BASE=5
     createApp({
       data() {
         return {
           message: 'Hello Vue!',
           oneTimeRange:7,
           subscriptionRange:21,
-          subscriptionPriceM:(21*3.5-((21*3.5)/10)),
-          subscriptionPriceY:(21*3.5*11),
-          subscriptionPriceYDiscount:(21*3.5*11-((21*3.5*11)/10)),
-          oneTimePrice:(7*4.5),
-          oneTimePriceDiscount:(7*4.5-((7*4.5)/10)),
+          subscriptionPriceM:(21*SUBSCRIPTION_BASE-((21*SUBSCRIPTION_BASE)/5)),
+          subscriptionPriceY:(21*SUBSCRIPTION_BASE*11),
+          subscriptionPriceYDiscount:(21*SUBSCRIPTION_BASE*11-((21*SUBSCRIPTION_BASE*11)/5)),
+          oneTimePrice:(7*ONETIME_BASE),
+          oneTimePriceDiscount:(7*ONETIME_BASE-((7*ONETIME_BASE*16.67)/100)),
           freq:'MONTHLY'
         }
       },
       methods:{
         calcOneTimeCustom(){
-          let price=this.oneTimeRange * 4.5
+          let price=this.oneTimeRange * ONETIME_BASE
           this.oneTimePrice=price
           if (this.oneTimeRange<51){
-            this.oneTimePriceDiscount= price - (price/10)
+            this.oneTimePriceDiscount= price - ((price*16.67)/100)
           }else{
-            this.oneTimePriceDiscount= price - (price/5)
+            this.oneTimePriceDiscount= price - (price/4)
           }
         },
         calcSubscribeCustom(){
           if (this.freq=='MONTHLY'){
-            let price=this.subscriptionRange * 3.5
+            let price=this.subscriptionRange * SUBSCRIPTION_BASE
             if (this.subscriptionRange<101){
-              this.subscriptionPriceM= (price-(price/10))
-            }else{
               this.subscriptionPriceM= (price-(price/5))
+            }else{
+              this.subscriptionPriceM= (price-(price*0.3))
             }
           }else {
-            let price=this.subscriptionRange * 3.5*11
+            let price=this.subscriptionRange * SUBSCRIPTION_BASE*11
             this.subscriptionPriceY=price
             if (this.subscriptionRange<101){
-              this.subscriptionPriceYDiscount= (price-(price/10))
-            }else{
               this.subscriptionPriceYDiscount= (price-(price/5))
+            }else{
+              this.subscriptionPriceYDiscount= (price-(price*0.3))
             }
           }
         },
