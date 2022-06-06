@@ -33,7 +33,11 @@
 
     <div class="block p-5 border ">
       <p class="text-xl font-semibold text-center">On time Custom</p>
-      <input type="range" min="7" max="100" v-model="oneTimeRange" class="w-full">
+
+      <div class="flex items-center">
+        <input type="range" min="7" max="100" v-model="oneTimeRange" class="w-full">
+        <input type="number" v-model="oneTimeRange" class="border w-16 ml-3">
+      </div>
       <p class="text-center"> Listings {{oneTimeRange}}</p>
       <p class="text-center text-2xl">${{oneTimePriceDiscount.toFixed(2)}} <strike>${{oneTimePrice.toFixed(2)}}</strike></p>
 
@@ -82,7 +86,10 @@
 
     <div class="block p-5 border ">
       <p class="text-xl font-semibold text-center">Subscribe Custom</p>
-      <input type="range" min="21" max="1000" v-model="subscriptionRange" class="w-full">
+     <div class="flex items-center">
+       <input type="range" min="21" max="1000" v-model="subscriptionRange" class="w-full">
+       <input type="number" v-model="subscriptionRange" class="border w-16 ml-3">
+     </div>
       <p class="text-center"> Listings {{subscriptionRange}}</p>
       <p class="text-center text-2xl">${{freq=='MONTHLY'?subscriptionPriceM:subscriptionPriceYDiscount}} <strike v-if="freq=='YEARLY'" class="text-sm">${{(subscriptionPriceY)}}</strike></p>
 
