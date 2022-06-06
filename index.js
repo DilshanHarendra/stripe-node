@@ -64,7 +64,7 @@ app.post("/product",(req,res)=>{
 app.post("/create-checkout-session", async (req, res) => {
     try {
         const {freq, packageName, qty}= req.body
-        console.log(freq=='ONE')
+
        /*
        #NOTE
        freq can be ONE, MONTHLY, YEARLY
